@@ -1,0 +1,135 @@
+
+    // app.get("/", (req, res) => {
+    //     {
+    //         res.send("This is demo page");
+    //     }
+    // });
+    
+    // app.get("/about", (req, res) => {
+    //     {
+    //         res.send("This is about page");
+    //     }
+    // });
+    
+    // app.get("/contact", (req, res) => {
+    //     {
+    //         res.send("This is contact page");
+    //     }
+    // });
+    
+    // app.get("/info", (req, res) => {
+    //     {
+    //         res.send({ success: true });
+    //     }
+    // });
+    
+    // app.get("/number", (req, res) => {
+    //     {
+    //         res.send([1, 2, 3, 4, 5, 6, 7, 8, 9]);
+    //     }
+    // });
+    
+    // app.get("/userModel", (req, res) => {
+    
+    //     res.json({
+    //         status: "success",
+    //         data: "userModel data"
+    //     })
+    
+    // });
+    // //res.status
+    // app.get("/status", (req, res) => {
+    //     res.status(400).send(`not found`);
+    // });
+    
+    // app.get("/json", (req, res) => {
+    //     res.status(201).json({ message: "This is json response" })
+    // });
+    
+    // app.get("/hello", (req, res) => {
+    //     res.send("Hello World");
+    
+    // });
+    
+
+    app.post("/register", async (req, res) => {
+  try {
+    const { name, email, password, role } = req.body;
+
+    if (!name || !email || !password || !role) {
+      return res.json({ message: "reqire all ........ " });
+    }
+
+    const user = await userModel.create({
+      name,
+      email,
+      password,
+      role,
+    });
+
+    if (!user) {
+      return res.json({ message: "Somthing went wrong cretaing user" });
+    }
+
+    return res.status(201).json({ message: "User Create sucessfully" });
+  } catch (error) {
+    return res.json({ message: "Somthing went wrong cretaing user" });
+  }
+});
+
+app.get("/user/:id", async (req, res) => {
+  try {
+    const userId = req.params.id;
+
+    const user = await userModel.findById(userId).select("-password -email");
+
+    if (!user) {
+      return res.json({ message: "User not found" });
+    }
+
+    res.json({ message: "user find", data: user });
+  } catch (error) {
+    return res.json({ message: "Somthing went wrong finding user" });
+  }
+});
+
+app.put("/update/:id", async (req, res) => {
+  try {
+    const userId = req.params.id;
+
+    const { name, email, password, role } = req.body;
+
+    const user = await userModel.findByIdAndUpdate(userId, {
+      name,
+      email,
+      password,
+      role,
+    });
+
+    if (!user) {
+      return res.json({ message: "Somthing went wrong updating user" });
+    }
+
+    return res.status(201).json({ message: "User update sucessfully" });
+  } catch (error) {
+    return res.json({ message: "Somthing went wrong updating user" });
+  }
+});
+
+app.delete("/delete/:id", async (req, res) => {
+  try {
+    const userId = req.params.id;
+
+    const user = await userModel.findByIdAndDelete(userId);
+
+    if (!user) {
+      return res.json({ message: "Somthing went wrong deleting user" });
+    }
+
+    return res
+      .status(201)
+      .json({ message: "User delete sucessfully", data: user.name });
+  } catch (error) {
+    return res.json({ message: "Somthing went wrong deleting user" });
+  }
+});
