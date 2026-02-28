@@ -11,7 +11,6 @@ const verifyuser = async (req, res, next) => {
 
         })// agar token nhi hai to user ko unauthorized message bhejenge
 
-
     }
     const decoded = await jwt.verify(token, process.env.ACCESS_TOKEN_SECRET) // token ko verify krne ke liye jwt.verify function ka use krte hai, isme token aur secret key pass krte hai, agar token valid hai to decoded data return krta hai, nhi to error throw krta hai
     console.log(decoded)

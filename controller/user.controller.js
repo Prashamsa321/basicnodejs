@@ -1,6 +1,7 @@
 import bcrypt from "bcrypt"
 import { User } from "../models/User.model.js"
 import jwt from "jsonwebtoken";
+import { uploadOnCloudinary } from "../utils/cloudinary.utils.js";
 
 
 
@@ -17,15 +18,21 @@ const accessTokensecret = async (user) => {// ye function user ke data ko token 
   )
 };
 
-
 const register = async (req, res) => {
   try {
-    const { name, email, password, age, role } = req.body
+    const {name, email, password, age, role } = req.body
 
     if (!name || !email || !password || !age || !role) {
       return res.status(400).json({ message: "All fields are required" })
     }
 
+
+    // const image = req?.files?.avatar?.[0]?.path; // ye line multer se aayi hai, jisme humne avatar naam ka field banaya hai, jisme user apna image upload krta hai, aur uska path humko milta hai, jisko hum database me store kr sakte hai, taki future me usko access kr sake
+    // console.log("image",image);
+     
+    const cloudinaryUrl = await uploadOnCloudinary(req?.files?.avatar?.[0]?.path) // ye function image ko cloudinary pe upload krta hai, aur uska url return krta hai, jo ki database me store hoga user ke avatar ke liye
+    console.log("cloudinaryUrl", cloudinaryUrl)
+    
     const existingUser = await User.findOne({ email }) // paila check krna h ki user exist krta hai ya nhi, nhi to create krna hai, agar exist krta hai to error dena hai
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" })
@@ -38,7 +45,8 @@ const register = async (req, res) => {
       email,
       password: newpassword,
       age,
-      role
+      role,
+      avatar: cloudinaryUrl
     })
 
     if (!user) {
@@ -54,12 +62,11 @@ const register = async (req, res) => {
   } catch (error) {
     return res.status(500).json({
       message: "Internal server error",
+      error: error.message
     })
 
   }
-}
-
-
+};
 const login = async (req, res) => {
 
   try {
@@ -112,8 +119,7 @@ const authcheck = async (req, res) => {
     message: "auth controller is working",
     data: user
   })
-}
-
+};
 const getbyid = async (req, res) => {
   try {
     const userid = req.params.id
@@ -139,12 +145,11 @@ const getbyid = async (req, res) => {
       error: error.message
     })
   }
-}
-
+};
 const logout = async (req, res) => {
-  try{
-    return res.status(200).clearCookie('Accesstoken', {  
-      httpOnly: true, 
+  try {
+    return res.status(200).clearCookie('Accesstoken', {
+      httpOnly: true,
       secure: true //normal attacks se bachav krta hai, https ke sath use krna chahiye
     }).json({
       message: "logout success"
@@ -152,47 +157,66 @@ const logout = async (req, res) => {
   }
 
 
-  catch(error){
+  catch (error) {
     return res.json({
       message: "internal error",
       error: error.message
     })
 
   }
-}
-
+};
 const getallusers = async (req, res) => {
-  try{
+  try {
     const alldata = await User.find().select("-password")
-    if(!alldata){
+    if (!alldata) {
       return res.json({
         message: "no data found"
 
       })
-    
+
     }
     return res.json({
       message: "all users data",
-      Totaluser : alldata.length,
+      Totaluser: alldata.length,
       data: alldata
     })
   }
 
-  
-  catch(error){
+
+  catch (error) {
     return res.json({
       message: "internal error",
       error: error.message
     })
-    
+
   }
-}
+};
+const deleteallusers = async (req, res) => {
+  try {
+    await User.deleteMany()
+    return res.json({
+      message: "all users deleted"
+    })
+  }
+
+  catch (error) {
+    return res.json({
+      message: "Error in deleting users",
+      error: error.message
+    })
+  }
+};
+
 export {
   register,
   login,
   authcheck,
   getbyid,
   logout,
-  getallusers
+  getallusers,
+  deleteallusers
 
 }
+
+//clounary ma gayearw clound name , cloud api key , api secret .
+//utils folder route create a file cloundinary.js
